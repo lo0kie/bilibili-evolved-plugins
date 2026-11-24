@@ -1,0 +1,26 @@
+{
+  "name": "bilibili-evolved-plugins",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Bilibili Evolved 自定义组件集合（TypeScript 多模块仓库）",
+  "scripts": {
+    "build": "node build.mjs",
+    "build:clean": "node build.mjs --no-obfuscate",
+    "build:registry": "node build.mjs --registry --no-obfuscate",
+    "dev": "node build.mjs --dev",
+    "check": "tsc --noEmit",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
+    "test": "node tests/load.cjs && node tests/e2e-feed.cjs && node tests/e2e-pgc.cjs",
+    "test:ci": "node tests/verify-dist.cjs",
+    "test:load": "node tests/load.cjs",
+    "test:feed": "node tests/e2e-feed.cjs",
+    "test:pgc": "node tests/e2e-pgc.cjs"
+  },
+  "devDependencies": {
+    "esbuild": "^0.24.0",
+    "javascript-obfuscator": "^5.10.1",
+    "prettier": "^3.10.1",
+    "typescript": "^5.6.0"
+  }
+}

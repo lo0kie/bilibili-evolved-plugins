@@ -1,0 +1,11 @@
+# 构建产物、依赖、探测数据
+node_modules/
+dist/
+probe/
+probe*.json
+*.log
+pnpm-lock.yaml
+
+# 本地编辑器
+.vscode/
+.idea/

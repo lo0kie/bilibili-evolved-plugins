@@ -1,0 +1,6 @@
+node_modules/
+*.log
+
+# 探测脚本产生的临时数据
+probe/
+probe*.json

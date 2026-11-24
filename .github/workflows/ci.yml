@@ -1,0 +1,122 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+permissions:
+  contents: write # 自增版本后回写、创建 release 需要
+
+jobs:
+  test:
+    name: 检查 + 构建 + 测试
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 12.23.0
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: pnpm
+
+      - name: Install
+        run: pnpm install --frozen-lockfile
+
+      - name: 格式化检查
+        run: pnpm run format:check
+
+      - name: 类型检查
+        run: pnpm run check
+
+      - name: 构建（混淆 + 压缩）
+        run: pnpm run build
+
+      - name: 单元测试（产物契约校验）
+        run: pnpm run test:ci
+
+      - name: 上传产物
+        uses: actions/upload-artifact@v4
+        with:
+          name: dist
+          path: dist/
+          retention-days: 7
+
+  release:
+    name: 版本自增 + 发布
+    if: |
+      github.event_name == 'push' &&
+      github.ref == 'refs/heads/main' &&
+      !contains(github.event.head_commit.message, '[skip ci]')
+    needs: test
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 12.23.0
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: pnpm
+
+      - name: Install
+        run: pnpm install --frozen-lockfile
+
+      - name: 版本自增
+        id: bump
+        run: |
+          node scripts/bump-version.cjs > /tmp/bump.txt
+          cat /tmp/bump.txt
+          echo "summary=$(grep '^SUMMARY=' /tmp/bump.txt | cut -d= -f2-)" >> "$GITHUB_OUTPUT"
+          echo "tag=$(grep '^RELEASE_TAG=' /tmp/bump.txt | cut -d= -f2-)" >> "$GITHUB_OUTPUT"
+
+      - name: 构建新版本产物
+        run: pnpm run build
+
+      - name: 提交版本号变更
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add src/modules/*/index.ts dist/
+          if git diff --cached --quiet; then
+            echo "no change"
+          else
+            git commit -m "chore: bump version [skip ci]"
+            git push
+          fi
+
+      - name: 创建 / 更新 Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ steps.bump.outputs.tag }}
+          name: ${{ steps.bump.outputs.tag }} · ${{ steps.bump.outputs.summary }}
+          body: |
+            模块版本：`${{ steps.bump.outputs.summary }}`
+
+            产物：
+            - `topbar-controls.js`（顶栏控件管理）
+            - `home-feed-filter.js`（首页推荐过滤）
+
+            安装方式：BE 设置面板 → 安装自定义组件 → 粘贴 / 从链接安装。
+          files: |
+            dist/topbar-controls.js
+            dist/home-feed-filter.js
+          draft: false
+          prerelease: false
+          generate_release_notes: true
