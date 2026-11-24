@@ -25,7 +25,7 @@ import { seasonStats, seasonTypeOf, setSeasonResolvedListener } from './season'
 declare const unsafeWindow: Window & { __bhf__?: unknown }
 
 const NAME = 'homeFeedFilter'
-const VERSION = '1.4.1'
+const VERSION = '1.4.2'
 const ATTR = 'data-bhf-hidden'
 /**
  * 隐藏前的内联 display 原值，**存在元素自己的属性上**。

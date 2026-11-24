@@ -12,7 +12,7 @@ import type { CachedItem, TopbarItem } from './types'
 declare const unsafeWindow: Window & { __bhc__?: unknown }
 
 const NAME = 'topbarControls'
-const VERSION = '3.7.3'
+const VERSION = '3.7.4'
 const ATTR = 'data-bhc-hidden'
 
 /**
